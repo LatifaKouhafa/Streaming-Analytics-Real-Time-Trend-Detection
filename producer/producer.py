@@ -83,7 +83,7 @@ while True:
                 "mode": "ArtList",
                 "format": "json",
                 "sort": "DateDesc",
-                "maxrecords": 150,
+                "maxrecords": 200,
                 "timespan": "24h"
             },
             timeout=20,

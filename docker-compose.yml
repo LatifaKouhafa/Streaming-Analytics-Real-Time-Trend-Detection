@@ -35,7 +35,7 @@ services:
     image: apache/spark:3.5.1
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
     container_name: spark
     depends_on:
       - kafka
