@@ -1,63 +1,81 @@
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.6.0
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
-
   kafka:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka
-    depends_on:
-      - zookeeper
+    hostname: kafka
     ports:
-      - "9092:9092"   # Windows (Python)
-      - "29092:29092" # Docker network (Spark)
+      - "9092:9092"     # Host (Python/CLI)
+      - "29092:29092"   # Docker network (Spark)
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # ---- KRaft required ----
+      CLUSTER_ID: "z_vVsliKS6qtipCc6rB0sQ"
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+
+      # ---- Listeners ----
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+
+      # ---- Single-node friendly ----
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+      # ---- Storage ----
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
 
   spark:
     image: apache/spark:3.5.1
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: spark
     depends_on:
       - kafka
     volumes:
-      - ./spark:/opt/spark-app
-      - ./ivy-cache:/tmp/ivy
-    command: >
-      /opt/spark/bin/spark-submit
-      --master local[*]
-      --conf spark.jars.ivy=/tmp/ivy
-      --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,org.postgresql:postgresql:42.7.3
-      /opt/spark-app/streaming_job.py
-      --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,org.postgresql:postgresql:42.7.3
-
+       - ./spark:/opt/spark-app
+       - ./ivy-cache:/tmp/ivy
+    command:
+       /opt/spark/bin/spark-submit
+       --master
+       local[*]
+       --conf
+       spark.jars.ivy=/tmp/ivy
+       --packages
+       org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,org.postgresql:postgresql:42.7.3
+       /opt/spark-app/stream_articles.py
 
   postgres:
     image: postgres:16
     container_name: postgres
     environment:
-      - POSTGRES_USER=demo
-      - POSTGRES_PASSWORD=demo
-      - POSTGRES_DB=streaming
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: streaming
     ports:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
 
+  
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - postgres
+
+
 volumes:
   kafka_data:
   pg_data:
-
-
-
-
