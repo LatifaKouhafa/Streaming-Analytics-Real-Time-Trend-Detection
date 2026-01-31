@@ -48,7 +48,7 @@ The pipeline runs continuously:
 Each Kafka message is a JSON event (UTF-8). 
 
 Example:
-{
+`{
   "article_id": "https://...",
   "theme": "sustainability_energy_climate",
   "source": "example",
@@ -57,7 +57,7 @@ Example:
   "url": "https://...",
   "published_at": "2026-01-31T12:00:00Z",
   "provider": "gdelt_doc_api"
-}
+}`
 
 
 ##  Processing Logic
