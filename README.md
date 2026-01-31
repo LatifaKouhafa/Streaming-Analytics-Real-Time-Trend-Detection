@@ -8,7 +8,7 @@ I built a **streaming data pipeline** that continuously receives messages (simul
 
 The goal is to reproduce a **real business use case**, such as trend detection or real-time system monitoring.
 
----
+
 
 ## Business Problem
 
@@ -21,7 +21,7 @@ In domains like media monitoring, sustainability intelligence, or risk analysis,
 
 Streaming enables **near real-time decision-making**, not delayed analysis.
 
----
+
 
 ## How It Works
 
@@ -33,7 +33,7 @@ The pipeline runs continuously:
 4. Enriched results are stored in a database  
 5. A dashboard displays live indicators and trends  
 
----
+
 
 ##  Architecture
 
@@ -42,6 +42,7 @@ The pipeline runs continuously:
 - Spark Structured Streaming consumes Kafka, enriches (lang + sentiment)
 - Spark writes enriched events to PostgreSQL
 - Grafana queries Postgres to display live KPIs
+
 
 ##  Data
 Each Kafka message is a JSON event (UTF-8). 
@@ -86,7 +87,6 @@ using foreachBatch + JDBC in append mode.
 
 <img width="1600" height="1200" alt="Streaming News Analytics-1769888701100" src="https://github.com/user-attachments/assets/97222bcb-e920-4af0-a111-150b6bd75062" />
 
-
 ##  Tech Stack
 
 - Ingestion: GDELT Doc API + Python producer
@@ -111,7 +111,7 @@ Before running the project, make sure you have the following installed:
 - Docker (version 20+)
 - Docker Compose (v2+)
 - Git
-
+  
 #### Start the streaming pipeline
 `docker compose up --build`
 
